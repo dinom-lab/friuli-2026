@@ -104,6 +104,11 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .keyrow input{flex:1;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card)}
 .xh{font-size:19px;margin:18px 0 8px}
 .buoy.xb{font-size:15px}
+.egg{cursor:pointer;border-bottom:1px dotted var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;z-index:2000;box-shadow:0 4px 16px rgba(0,0,0,.25);transition:opacity .3s}
+.shoe{position:fixed;top:-40px;font-size:28px;z-index:1999;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+@media (prefers-reduced-motion:reduce){.shoe{display:none}}
 .leaflet-popup-content{font:16px/1.4 "Source Sans 3",sans-serif}
 .leaflet-popup-content b{font-family:"Familjen Grotesk",sans-serif}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
@@ -217,7 +222,7 @@ const DAYS = {
     {t:'12:30', n:'Antico Leon d\u2019Oro', d:'Ručak u vrtu kraj Ponte del Diavolo. Nedjeljom kuhinja radi 12–14, pa rezervirajte (+39 0432 731100). Obavezno gelato za stolom na kraju.', lat:46.0906284, lng:13.4321741},
     {t:'14:00', n:'Piazza Paolo Diacono', d:'Kava i gubana za put. Polazak prema Duinu oko 14:15, vožnja oko 55 min.', lat:46.0946837, lng:13.4311858},
     {t:'15:15', n:'Castello di Duino', d:'Dvorac na litici iznad mora, nedjeljom otvoren do 17:30. Uz izložbu su kula s pogledom i stari bunker. Računajte oko 1 h.', lat:45.772055, lng:13.603984},
-    {t:'16:15', n:'Rilkeova staza', d:'Lagana šetnja po litici iznad mora prema Sistiani. Hodajte 25–30 min u jednom smjeru i vratite se do auta. Obucite udobne tenisice.', lat:45.7720792, lng:13.6145708},
+    {t:'16:15', n:'Rilkeova staza', d:'Lagana šetnja po litici iznad mora prema Sistiani. Hodajte 25–30 min u jednom smjeru i vratite se do auta. Obucite udobne <span class="egg" tabindex="0" role="button" aria-label="tenisice">tenisice</span>.', lat:45.7720792, lng:13.6145708},
     {t:'17:50', n:'Ipercoop Montedoro', d:'Veliki Coop u trgovačkom centru Montedoro kraj Muggie, nedjeljom 10–20:30, s velikom garažom u zgradi. Od Duina oko 30 min brzom cestom, a granica sa Slovenijom je odmah do. Računajte 45 min i ponesite rashladnu torbu.', lat:45.5925639, lng:13.8080189},
     {t:'~21:30', n:'Zagreb', d:'Polazak iz Coopa oko 18:40, preko granice kod Škofija pa Koper i Ljubljana, oko 2 h 45 min.', lat:45.7675261, lng:15.9349155, home:true}
   ]}
@@ -410,6 +415,20 @@ async function loadWeather(){
   document.getElementById('wx').hidden=false;
 }
 loadWeather();
+
+// Easter egg 👟
+document.addEventListener('click',e=>{ if(e.target.closest('.egg')) eggRun(); });
+document.addEventListener('keydown',e=>{ if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('egg')){e.preventDefault();eggRun();} });
+function eggRun(){
+  const t=document.createElement('div');t.className='toast';t.textContent='👟 New Balance po mogućnosti';document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),400);},2600);
+  for(let i=0;i<14;i++){
+    const s=document.createElement('div');s.className='shoe';s.textContent='👟';
+    s.style.left=Math.random()*100+'vw';s.style.animationDuration=(1.8+Math.random()*1.6)+'s';s.style.animationDelay=(Math.random()*.6)+'s';
+    document.body.appendChild(s);setTimeout(()=>s.remove(),4200);
+  }
+}
+
 
 
 // Day filter
