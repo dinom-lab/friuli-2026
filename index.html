@@ -140,7 +140,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   <section id="plan" aria-label="Plan po danima"></section>
 
   <section>
-    <h2>Smještaj i hrana</h2>
+    <h2>Restorani i barovi</h2>
     <div id="extras"></div>
   </section>
 
@@ -166,7 +166,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     <div class="panel">
       <p><b>Festa della Zucca.</b> Regionalni kalendar događanja navodi je u nedjelju 11.10. Uz Borgo Brossana obično se širi i na centar: tržnica, rukotvorine, rezbarenje bundeva, frittelle od bundeve i kesteni uz ribollu. Zato u Cividale dođite ranije, dok ima parkinga.</p>
       <p><b>Muggia.</b> Parcheggio Caliterna košta oko 1,40–1,50 €/h i može se platiti preko EasyParka. Castello je privatan i ne ulazi se u njega.</p>
-      <p><b>Udine.</b> Castello di Udine: dvorište i pogled su besplatni, muzej radi uto–ned 10–18. Aperitivo se u Udinama zove tajut.</p>
+      <p><b>Udine.</b> Spavamo u Ambassador Palace Hotelu (Via Carducci 46), na rubu starog grada, s garažom. Castello di Udine: dvorište i pogled su besplatni, muzej radi uto–ned 10–18. Aperitivo se u Udinama zove tajut.</p>
       <p><b>Cividale.</b> Tempietto radi 10–13 i 14–18, a u podnevnoj pauzi je zatvoren. Probajte frico i gubanu.</p>
       <p><b>Barcolana.</b> U nedjelju 11.10. je u Trstu najveća jedriličarska regata na svijetu, pa su centar i obala prema Barcoli i Miramaru krcati. Zato idemo u Duino, 25 km prije Trsta, i u Coop u Montedoru kraj Muggie, bez ulaska u centar.</p>
       <p><b>Ceste.</b> Za Sloveniju treba e-vinjeta. Dionice talijanske autoceste plaćaju se na naplatnim kućicama.</p>
@@ -203,13 +203,14 @@ const DAYS = {
     {t:'13:00', n:'Bar Tenda Rossa', d:'Aperitivo sa zalogajima na Piazzi Marconi, pored katedrale. Ujedno lagani ručak.', lat:45.6040761, lng:13.7676279},
     {t:'14:00', n:'Castello di Muggia', d:'Privatan je, ali je pogled na Muggiu i zaljev odličan.', lat:45.6047305, lng:13.7659727},
     {t:'14:40', n:'Gelateria Jimmy', d:'Kraj lučice, oko 2 € kugla. Pistacchio al tramonto.', lat:45.6048931, lng:13.7669883},
-    {t:'18:20', n:'Castello di Udine', d:'U Udine stižete oko 16:15, pa check-in i šetnja starim gradom. Zatim uspon na brdo usred grada. Dvorište i vidikovac su besplatni, zalazak sunca oko 18:40. Muzej radi do 18:00.', lat:46.064458, lng:13.236097},
+    {t:'16:15', n:'Ambassador Palace Hotel', d:'Check-in (Via Carducci 46). Auto u hotelsku garažu, 18 € po noći, mora se rezervirati unaprijed. Do starog grada je 5–10 min pješice.', lat:46.0590241, lng:13.2407242},
+    {t:'18:20', n:'Castello di Udine', d:'Nakon odmora i šetnje starim gradom uspon na brdo usred grada, oko 10 min pješice od hotela. Dvorište i vidikovac su besplatni, zalazak sunca oko 18:40. Muzej radi do 18:00.', lat:46.064458, lng:13.236097},
     {t:'18:50', n:'Piazza della Libertà', d:'Najljepši trg u Udinama, odmah ispod dvorca.', lat:46.0633122, lng:13.2357425},
     {t:'19:00', n:'Piazza Matteotti', d:'Tajut: čaša lokalnog vina na nogama. Za mirniju varijantu Enoteca Giardinetto odmah iza ugla.', lat:46.0632017, lng:13.2335596},
     {t:'20:00', n:'Osteria Alla Ghiacciaia', d:'Večera uz kanal, osterija od 1923. Frico i cjarsons su hvaljeni. Subotom radi od 18 h, rezervirajte (+39 0432 502471).', lat:46.0626592, lng:13.2324522}
   ]},
   2:{title:'Nedjelja: Cividale, Duino i Coop', stops:[
-    {t:'10:00', n:'Udine', d:'Lagano jutro i doručak. Do Cividalea oko 20 min.', lat:46.0633122, lng:13.2357425},
+    {t:'10:00', n:'Ambassador Palace Hotel', d:'Doručak i check-out, auto iz garaže. Do Cividalea oko 20 min.', lat:46.0590241, lng:13.2407242},
     {t:'10:30', n:'Ponte del Diavolo', d:'Stepenicama do rijeke Natisone po najbolji kadar.', lat:46.0918288, lng:13.4317029},
     {t:'11:00', n:'Tempietto Longobardo', d:'UNESCO, 8. stoljeće. Radi 10–13 i 14–18, pa ujutro stignete bez žurbe.', lat:46.0930887, lng:13.4324826},
     {t:'11:45', n:'Borgo Brossana', d:'Srce Feste della Zucca: frittelle od bundeve, kesteni uz ribollu i rezbarenje bundeva. Štandovi su i po centru.', lat:46.0941751, lng:13.4391158},
@@ -224,8 +225,6 @@ const DAYS = {
 
 
 const EXTRAS = [
-  {day:1, k:'sleep', n:'Apartman u starom gradu (preporuka)', d:'Ocjena 9,5 (198 recenzija), oko 243 € za sve četvero. Dvije spavaće sobe, dvije kupaonice, dva privatna parkirna mjesta.', lat:46.059756, lng:13.242112, url:'https://www.booking.com/hotel/it/private-parking-elegant-apartment-in-old-town.html?checkin=2026-10-10&checkout=2026-10-11&no_rooms=1&group_adults=4&selected_currency=EUR'},
-  {day:1, k:'sleep', n:'Bicamere in centro storico (najjeftinije)', d:'Oko 121 € za sve četvero, besplatan parking. Nov je i još nema recenzija.', lat:46.067482, lng:13.230499, url:'https://www.booking.com/hotel/it/bicamere-in-centro-storico.html?checkin=2026-10-10&checkout=2026-10-11&no_rooms=1&group_adults=4&selected_currency=EUR'},
   {day:1, k:'food', n:'Trattoria Al Castello, Muggia', d:'Ako umjesto aperitiva želite pravi ručak: riba i plodovi mora, terasa s pogledom, odmah ispod dvorca. Subotom 12–15.', lat:45.6048331, lng:13.7644471},
   {day:1, k:'food', n:'Sal de mar, Muggia', d:'Riblji restoran na lučici, radi cijeli dan 12–22. Hvaljena lazanja s plodovima mora i sorbet od limuna.', lat:45.6050963, lng:13.7672826},
   {day:1, k:'food', n:'Enoteca Giardinetto, Udine', d:'Vinski bar blizu Piazze Matteotti, puno vina na čašu. Subotom od 17:30.', lat:46.0643676, lng:13.2332292},
@@ -309,8 +308,9 @@ Object.entries(DAYS).forEach(([day,cfg])=>{
 // Extras: accommodation and restaurants
 const xwrap=document.getElementById('extras');
 ['sleep','food'].forEach(kind=>{
+  if(!EXTRAS.some(x=>x.k===kind))return;
   const box=document.createElement('div');
-  box.innerHTML=`<h3 class="xh">${kind==='sleep'?'Smještaj u Udinama':'Restorani i barovi'}</h3><ol class="tl"></ol>`;
+  box.innerHTML=`<h3 class="xh">${kind==='sleep'?'Smještaj':'Gdje jesti i piti'}</h3><ol class="tl"></ol>`;
   const ol=box.querySelector('ol');
   EXTRAS.forEach((x,i)=>{ if(x.k!==kind)return;
     const key=`x-${i}`;
@@ -445,7 +445,7 @@ function save(s){try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}}
 let state=Object.assign({checks:{},people:'Dino, Dolores, Krešo, Jelena',expenses:[]},load());
 
 // Checklist
-const ITEMS=['Slovenska e-vinjeta (tjedna)','Smještaj u Udinama s parkingom','Rezervacija: Osteria Alla Ghiacciaia (sub. 20 h) i Antico Leon d’Oro (ned. 12:30)','EasyPark aplikacija za parking u Muggii','Rashladna torba za Coop','Osobne iskaznice i malo gotovine'];
+const ITEMS=['Slovenska e-vinjeta (tjedna)','Rezervirati garažu u hotelu Ambassador Palace (18 €/noć, +39 0432 503777)','Rezervacija: Osteria Alla Ghiacciaia (sub. 20 h) i Antico Leon d’Oro (ned. 12:30)','EasyPark aplikacija za parking u Muggii','Rashladna torba za Coop','Osobne iskaznice i malo gotovine'];
 const cl=document.getElementById('checklist');
 ITEMS.forEach((t,i)=>{
   const li=document.createElement('li');
