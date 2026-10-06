@@ -362,20 +362,30 @@ async function loadWeather(){
   const locs=[...new Set(pts.map(p=>p.loc))];
   const lat=locs.map(l=>l.split(',')[0]).join(','), lng=locs.map(l=>l.split(',')[1]).join(',');
   const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m&timezone=Europe%2FRome&start_date=${TRIP_DATES[1]}&end_date=${TRIP_DATES[2]}`;
-  let data;
+  let data, icon=null, usedIcon=false;
   try{
     const r=await fetch(url); if(!r.ok)throw 0;
     data=await r.json(); if(!Array.isArray(data))data=[data];
   }catch(e){
     const w=document.getElementById('wx'); w.hidden=false;
-    document.getElementById('wxnote').textContent='Prognoza se pojavi automatski kad bude dostupna (Open-Meteo daje do 16 dana unaprijed).';
+    document.getElementById('wxnote').innerHTML='Prognoza se pojavi automatski kad bude dostupna (do 16 dana unaprijed). Službena prognoza: <a href="https://www.osmer.fvg.it/previsioni.php" target="_blank" rel="noopener">OSMER FVG</a>.';
     return;
   }
+  // ItaliaMeteo ARPAE ICON-2I: 2 km regional model for Italy, ~72 h ahead. Preferred where available.
+  try{
+    const r2=await fetch(url+'&models=italia_meteo_arpae_icon_2i');
+    if(r2.ok){icon=await r2.json(); if(!Array.isArray(icon))icon=[icon];}
+  }catch(e){}
+  const pick=(li,field,k)=>{
+    const v=icon&&icon[li]&&icon[li].hourly&&icon[li].hourly[field]?icon[li].hourly[field][k]:null;
+    if(v!==null&&v!==undefined){usedIcon=true;return v;}
+    return data[li].hourly[field][k];
+  };
   const sum={1:{t:[],p:[],codes:[],bura:0},2:{t:[],p:[],codes:[],bura:0}};
   pts.forEach(p=>{
-    const H=data[locs.indexOf(p.loc)].hourly, k=(p.day-1)*24+p.hr;
-    const t=Math.round(H.temperature_2m[k]), pr=H.precipitation_probability[k]??0, c=H.weather_code[k];
-    const g=Math.round(H.wind_gusts_10m[k]), dir=H.wind_direction_10m[k];
+    const li=locs.indexOf(p.loc), H=data[li].hourly, k=(p.day-1)*24+p.hr;
+    const t=Math.round(pick(li,'temperature_2m',k)), pr=H.precipitation_probability[k]??0, c=pick(li,'weather_code',k);
+    const g=Math.round(pick(li,'wind_gusts_10m',k)), dir=pick(li,'wind_direction_10m',k);
     const S=sum[p.day]; S.t.push(t); S.p.push(pr); S.codes.push(c);
     const isBura=dir>=20&&dir<=100&&g>=45&&p.s.lng>13.5&&p.s.lat<45.8; // NE wind on the Trieste coast
     if(isBura)S.bura=Math.max(S.bura,g);
@@ -396,7 +406,7 @@ async function loadWeather(){
       ${maxP>=60?`<p class="wxwarn">Ponesite kišobran</p>`:''}`;
     grid.appendChild(card);
   });
-  document.getElementById('wxnote').textContent='Prognoza za planirana mjesta i sate (Open-Meteo), osvježava se pri svakom otvaranju stranice. Za svaku točku piše i u planu ispod karte.';
+  document.getElementById('wxnote').innerHTML=`Prognoza za planirana mjesta i sate, osvježava se pri svakom otvaranju. Model: ${usedIcon?'ItaliaMeteo ICON-2I (2 km, talijanski državni model)':'Open-Meteo (ICON-2I se uključi oko 3 dana prije puta)'}. Službena prognoza s komentarom meteorologa: <a href="https://www.osmer.fvg.it/previsioni.php" target="_blank" rel="noopener">OSMER FVG</a>.`;
   document.getElementById('wx').hidden=false;
 }
 loadWeather();
