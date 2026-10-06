@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="hr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Muggia – Udine – Cividale, 10.–11.10.2026.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --sea:#1D6FA3; --river:#2F7A57; --signal:#E8A900; --ink:#17232E; --stone:#EDF1F3;
+  --paper:#FFFFFF; --muted:#5B6B78; --line:#D5DDE3;
+  --bg:var(--stone); --card:var(--paper); --text:var(--ink);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#101A22; --card:#18252F; --text:#E6EDF2; --muted:#93A4B2; --line:#2A3A46;
+    --sea:#4A9BD1; --river:#4FA97C; --signal:#F2B92E;
+  }
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font:400 17px/1.5 "Source Sans 3",system-ui,sans-serif}
+h1,h2,h3{font-family:"Familjen Grotesk",system-ui,sans-serif;margin:0;line-height:1.15}
+a{color:var(--sea)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--signal);outline-offset:2px}
+
+header{padding:20px 18px 14px;max-width:760px;margin:0 auto}
+header h1{font-size:clamp(28px,7vw,40px);letter-spacing:-.02em}
+header p{margin:6px 0 0;color:var(--muted)}
+.flag{display:inline-block;margin-top:10px;padding:4px 10px;border-radius:4px;background:var(--signal);color:#17232E;font-weight:600;font-size:15px}
+
+#map{height:52vh;min-height:320px;max-height:560px;width:100%;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+
+.days{position:sticky;top:env(safe-area-inset-top,0px);z-index:500;background:var(--bg);border-bottom:1px solid var(--line)}
+.days-inner{display:flex;gap:6px;max-width:760px;margin:0 auto;padding:10px 18px}
+.days button{flex:1;border:1px solid var(--line);background:var(--card);padding:9px 6px;border-radius:999px;cursor:pointer;font-weight:600}
+.days button[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+
+main{max-width:760px;margin:0 auto;padding:6px 18px 60px}
+section{margin-top:28px}
+section>h2{font-size:24px;margin-bottom:10px}
+.dayhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:24px 0 8px}
+.dayhead h3{font-size:21px}
+.dayhead a{font-size:15px;white-space:nowrap}
+
+/* Timeline: stops as buoys, drive legs as wake lines */
+.tl{list-style:none;margin:0;padding:0}
+.stop{display:grid;grid-template-columns:54px 30px 1fr;gap:0 10px;align-items:start}
+.stop .t{font-family:"Familjen Grotesk",sans-serif;font-weight:700;padding-top:3px;text-align:right}
+.buoy{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px;margin-top:1px;border:0;padding:0;cursor:pointer}
+.stop.active .body h4{color:var(--sea)}
+.stop.active .buoy{box-shadow:0 0 0 4px var(--signal)}
+.stop .body{padding-bottom:6px}
+.stop h4{margin:0;font-size:18px;font-family:"Familjen Grotesk",sans-serif}
+.stop p{margin:2px 0 6px;color:var(--muted);font-size:16px}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts a,.acts button{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:5px 10px;font-size:15px;text-decoration:none;color:var(--text);cursor:pointer}
+.leg{display:grid;grid-template-columns:54px 30px 1fr;gap:0 10px;min-height:34px}
+.leg .wake{justify-self:center;width:0;border-left:3px dashed var(--line)}
+.leg.drive .wake{border-left-style:solid}
+.leg span{align-self:center;font-size:15px;color:var(--muted)}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.panel p{margin:0 0 10px}
+.panel p:last-child{margin:0}
+.check{list-style:none;padding:0;margin:0}
+.check li{border-bottom:1px solid var(--line)}
+.check li:last-child{border:0}
+.check label{display:flex;gap:12px;align-items:center;padding:10px 0;cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--river)}
+.check input:checked+span{text-decoration:line-through;color:var(--muted)}
+
+.form{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.form input,.form select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.form .wide{grid-column:1/-1}
+.btn{padding:10px 14px;border-radius:6px;border:0;background:var(--sea);color:#fff;font-weight:600;cursor:pointer}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+table{width:100%;border-collapse:collapse;font-size:16px;margin-top:12px}
+td,th{text-align:left;padding:7px 4px;border-bottom:1px solid var(--line)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.del{border:0;background:none;color:var(--muted);cursor:pointer;font-size:18px}
+.settle{margin:12px 0 0;padding-left:20px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.empty{color:var(--muted);margin:10px 0 0}
+.keybar{max-width:760px;margin:0 auto;padding:0 18px 12px}
+.keybar p{margin:0 0 8px;font-size:16px}
+.keyrow{display:flex;gap:8px}
+.keyrow input{flex:1;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card)}
+.xh{font-size:19px;margin:18px 0 8px}
+.buoy.xb{font-size:15px}
+.leaflet-popup-content{font:16px/1.4 "Source Sans 3",sans-serif}
+.leaflet-popup-content b{font-family:"Familjen Grotesk",sans-serif}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Muggia, Udine i Cividale</h1>
+  <p>Subota i nedjelja, 10.–11. listopada 2026. Sa Zagrebom na oba kraja.</p>
+  <span class="flag">Datum Feste della Zucca za 2026. još nije potvrđen</span>
+</header>
+
+<div id="keybar" class="keybar" hidden>
+  <p>Karta treba besplatni CARTO ključ. Uzmi ga na <a href="https://carto.com/basemaps/apikey" target="_blank" rel="noopener">carto.com/basemaps/apikey</a> i zalijepi ovdje.</p>
+  <div class="keyrow"><input id="keyinput" placeholder="CARTO ključ" aria-label="CARTO ključ" autocomplete="off"><button class="btn" id="keysave">Spremi ključ</button></div>
+</div>
+<div id="map" role="region" aria-label="Karta rute"></div>
+
+<nav class="days" aria-label="Odabir dana">
+  <div class="days-inner">
+    <button data-day="all" aria-pressed="true">Cijeli vikend</button>
+    <button data-day="1" aria-pressed="false">Subota</button>
+    <button data-day="2" aria-pressed="false">Nedjelja</button>
+  </div>
+</nav>
+
+<main>
+  <section id="plan" aria-label="Plan po danima"></section>
+
+  <section>
+    <h2>Smještaj i hrana</h2>
+    <div id="extras"></div>
+  </section>
+
+  <section>
+    <h2>Opcija: shopping umjesto Duina</h2>
+    <div class="panel">
+      <p><b>Palmanova Designer Village</b> umjesto Duina, ako vam se ipak ide u šoping. Radi i nedjeljom 10–20 h, oko 90 trgovina s popustima 30–70 %, a iz Cividalea je oko 35 min.</p>
+      <p>Ako idete: outlet 15:00–18:00, pa aperitivo na Piazzi Grande u Palmanovi (grad-tvrđava u obliku zvijezde, 5 min dalje) i polazak u 19:00. Doma ste oko 22:00.</p>
+      <p><b>Città Fiera</b> kraj Udina je rezerva, ali nedjeljno radno vrijeme trgovina provjerite na njihovoj stranici. U Sloveniji su veće trgovine nedjeljom zatvorene.</p>
+      <div class="acts"><a href="https://www.google.com/maps/dir/?api=1&destination=45.8855362,13.3436439&travelmode=driving" target="_blank" rel="noopener">Navigacija do outleta</a></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Prije polaska</h2>
+    <div class="panel">
+      <ul class="check" id="checklist"></ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Dobro je znati</h2>
+    <div class="panel">
+      <p><b>Festa della Zucca.</b> Obično je prve nedjelje u listopadu (2025. je bila 5.10., 2024. 6.10.), pa 2026. možda pada 4.10. Provjerite na Facebook stranici Borgo Brossana ili cividale.net.</p>
+      <p><b>Muggia.</b> Parcheggio Caliterna košta oko 1,40–1,50 €/h i može se platiti preko EasyParka. Castello je privatan i ne ulazi se u njega.</p>
+      <p><b>Udine.</b> Castello di Udine: dvorište i pogled su besplatni, muzej radi uto–ned 10–18. Aperitivo se u Udinama zove tajut.</p>
+      <p><b>Cividale.</b> Tempietto radi 10–13 i 14–18, a u podnevnoj pauzi je zatvoren. Probajte frico i gubanu.</p>
+      <p><b>Barcolana.</b> U nedjelju 11.10. je u Trstu najveća jedriličarska regata na svijetu, pa su centar i obala prema Barcoli i Miramaru krcati. Zato idemo u Duino, 25 km prije Trsta, i u Coop u Montedoru kraj Muggie, bez ulaska u centar.</p>
+      <p><b>Ceste.</b> Za Sloveniju treba e-vinjeta. Dionice talijanske autoceste plaćaju se na naplatnim kućicama.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Troškovnik ekipe</h2>
+    <div class="panel">
+      <div class="form">
+        <input class="wide" id="people" placeholder="Imena, odvojena zarezom (npr. Dino, Dolores, Krešo, Jelena)" aria-label="Sudionici">
+        <input id="exDesc" placeholder="Za što (npr. pizza)" aria-label="Opis troška">
+        <input id="exAmt" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Iznos €" aria-label="Iznos u eurima">
+        <select id="exWho" class="wide" aria-label="Tko je platio"></select>
+        <button class="btn wide" id="addEx">Dodaj trošak</button>
+      </div>
+      <div id="ledger"></div>
+      <div class="row">
+        <a class="btn" id="shareWa" target="_blank" rel="noopener">Pošalji obračun na WhatsApp</a>
+        <button class="btn ghost" id="resetEx">Obriši troškove</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const COLORS = {1:getComputedStyle(document.documentElement).getPropertyValue('--sea').trim()||'#1D6FA3',
+                2:getComputedStyle(document.documentElement).getPropertyValue('--river').trim()||'#2F7A57'};
+const DAYS = {
+  1:{title:'Subota: Muggia, Palmanova i Udine', stops:[
+    {t:'10:00', n:'Zagreb', d:'Polazak. Do Muggie oko 2 h 45 min.', lat:45.7675261, lng:15.9349155, home:true},
+    {t:'12:45', n:'Parcheggio Caliterna', d:'Parking u Muggii, oko 1,40–1,50 €/h.', lat:45.6040616, lng:13.7695102},
+    {t:'13:00', n:'Bar Tenda Rossa', d:'Aperitivo sa zalogajima na Piazzi Marconi, pored katedrale. Ujedno lagani ručak.', lat:45.6040761, lng:13.7676279},
+    {t:'14:00', n:'Castello di Muggia', d:'Privatan je, ali je pogled na Muggiu i zaljev odličan.', lat:45.6047305, lng:13.7659727},
+    {t:'14:40', n:'Gelateria Jimmy', d:'Kraj lučice, oko 2 € kugla. Pistacchio al tramonto.', lat:45.6048931, lng:13.7669883},
+    {t:'18:20', n:'Castello di Udine', d:'U Udine stižete oko 16:15, pa check-in i šetnja starim gradom. Zatim uspon na brdo usred grada. Dvorište i vidikovac su besplatni, zalazak sunca oko 18:40. Muzej radi do 18:00.', lat:46.064458, lng:13.236097},
+    {t:'18:50', n:'Piazza della Libertà', d:'Najljepši trg u Udinama, odmah ispod dvorca.', lat:46.0633122, lng:13.2357425},
+    {t:'19:00', n:'Piazza Matteotti', d:'Tajut: čaša lokalnog vina na nogama. Za mirniju varijantu Enoteca Giardinetto odmah iza ugla.', lat:46.0632017, lng:13.2335596},
+    {t:'20:00', n:'Osteria Alla Ghiacciaia', d:'Večera uz kanal, osterija od 1923. Frico i cjarsons su hvaljeni. Subotom radi od 18 h, rezervirajte (+39 0432 502471).', lat:46.0626592, lng:13.2324522}
+  ]},
+  2:{title:'Nedjelja: Cividale, Duino i Coop', stops:[
+    {t:'10:00', n:'Udine', d:'Lagano jutro i doručak. Do Cividalea oko 20 min.', lat:46.0633122, lng:13.2357425},
+    {t:'10:30', n:'Ponte del Diavolo', d:'Stepenicama do rijeke Natisone po najbolji kadar.', lat:46.0918288, lng:13.4317029},
+    {t:'11:00', n:'Tempietto Longobardo', d:'UNESCO, 8. stoljeće. Radi 10–13 i 14–18, pa ujutro stignete bez žurbe.', lat:46.0930887, lng:13.4324826},
+    {t:'11:45', n:'Borgo Brossana', d:'Ovdje je Festa della Zucca, ako je taj dan: frittelle od bundeve, kesteni i ribolla. I bez feste je lijepa šetnja uz rijeku.', lat:46.0941751, lng:13.4391158},
+    {t:'12:30', n:'Antico Leon d\u2019Oro', d:'Ručak u vrtu kraj Ponte del Diavolo. Nedjeljom kuhinja radi 12–14, pa rezervirajte (+39 0432 731100). Obavezno gelato za stolom na kraju.', lat:46.0906284, lng:13.4321741},
+    {t:'14:00', n:'Piazza Paolo Diacono', d:'Kava i gubana za put. Polazak prema Duinu oko 14:15, vožnja oko 55 min.', lat:46.0946837, lng:13.4311858},
+    {t:'15:15', n:'Castello di Duino', d:'Dvorac na litici iznad mora, nedjeljom otvoren do 17:30. Uz izložbu su kula s pogledom i stari bunker. Računajte oko 1 h.', lat:45.772055, lng:13.603984},
+    {t:'16:15', n:'Rilkeova staza', d:'Lagana šetnja po litici iznad mora prema Sistiani. Hodajte 25–30 min u jednom smjeru i vratite se do auta. Obucite udobne tenisice.', lat:45.7720792, lng:13.6145708},
+    {t:'17:50', n:'Ipercoop Montedoro', d:'Veliki Coop u trgovačkom centru Montedoro kraj Muggie, nedjeljom 10–20:30, s velikom garažom u zgradi. Od Duina oko 30 min brzom cestom, a granica sa Slovenijom je odmah do. Računajte 45 min i ponesite rashladnu torbu.', lat:45.5925639, lng:13.8080189},
+    {t:'~21:30', n:'Zagreb', d:'Polazak iz Coopa oko 18:40, preko granice kod Škofija pa Koper i Ljubljana, oko 2 h 45 min.', lat:45.7675261, lng:15.9349155, home:true}
+  ]}
+};
+
+
+const EXTRAS = [
+  {day:1, k:'sleep', n:'Apartman u starom gradu (preporuka)', d:'Ocjena 9,5 (198 recenzija), oko 243 € za sve četvero. Dvije spavaće sobe, dvije kupaonice, dva privatna parkirna mjesta.', lat:46.059756, lng:13.242112, url:'https://www.booking.com/hotel/it/private-parking-elegant-apartment-in-old-town.html?checkin=2026-10-10&checkout=2026-10-11&no_rooms=1&group_adults=4&selected_currency=EUR'},
+  {day:1, k:'sleep', n:'Bicamere in centro storico (najjeftinije)', d:'Oko 121 € za sve četvero, besplatan parking. Nov je i još nema recenzija.', lat:46.067482, lng:13.230499, url:'https://www.booking.com/hotel/it/bicamere-in-centro-storico.html?checkin=2026-10-10&checkout=2026-10-11&no_rooms=1&group_adults=4&selected_currency=EUR'},
+  {day:1, k:'food', n:'Trattoria Al Castello, Muggia', d:'Ako umjesto aperitiva želite pravi ručak: riba i plodovi mora, terasa s pogledom, odmah ispod dvorca. Subotom 12–15.', lat:45.6048331, lng:13.7644471},
+  {day:1, k:'food', n:'Sal de mar, Muggia', d:'Riblji restoran na lučici, radi cijeli dan 12–22. Hvaljena lazanja s plodovima mora i sorbet od limuna.', lat:45.6050963, lng:13.7672826},
+  {day:1, k:'food', n:'Enoteca Giardinetto, Udine', d:'Vinski bar blizu Piazze Matteotti, puno vina na čašu. Subotom od 17:30.', lat:46.0643676, lng:13.2332292},
+  {day:1, k:'food', n:'Osteria Ex Provinciali, Udine', d:'Rezerva za večeru: obiteljska osterija puna lokalaca, domaća tjestenina, velike porcije. Subotom od 19 h.', lat:46.0635567, lng:13.2374983},
+  {day:1, k:'food', n:'Gatti e Re, Udine', d:'Koktel bar za kraj večeri, ocjena 4,9. Subotom do 2 h.', lat:46.0641558, lng:13.2312336},
+  {day:2, k:'food', n:'Al Campanile, Cividale', d:'Rezerva za ručak, ako Leon d\u2019Oro bude pun: hvaljen frico, nedjeljom radi do 15 h.', lat:46.0927488, lng:13.4313179}
+];
+const XICON={sleep:'🛏️',food:'🍽️'};
+function xicon(day,k){
+  return L.divIcon({className:'',iconSize:[30,30],iconAnchor:[15,15],
+    html:`<div style="width:30px;height:30px;border-radius:8px;background:#fff;border:2px solid ${COLORS[day]};display:grid;place-items:center;font-size:16px;box-shadow:0 1px 4px rgba(0,0,0,.3)">${XICON[k]}</div>`});
+}
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+const map = L.map('map',{zoomControl:true, scrollWheelZoom:false});
+map.setView([45.85,14.7],8); // GL layer needs a view before it is added
+// Base map: CARTO Voyager (light). Since Aug/Sep 2026 CARTO needs a free key:
+// carto.com/basemaps/apikey (no account, free for non-commercial use).
+// Paste it below, or enter it once in the field above the map (saved on that device).
+const CARTO_KEY = 'cb1_42al_1_a9543d92cf989e5220d30162';
+let cartoKey = CARTO_KEY;
+try{ cartoKey = cartoKey || localStorage.getItem('carto-key') || ''; }catch(e){}
+L.tileLayer(`https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png${cartoKey?`?key=${encodeURIComponent(cartoKey)}`:''}`,{
+  maxZoom:20,
+  attribution:'&copy; OpenStreetMap contributors, &copy; CARTO'
+}).addTo(map);
+if(!cartoKey){
+  const bar=document.getElementById('keybar'); bar.hidden=false;
+  document.getElementById('keysave').addEventListener('click',()=>{
+    const v=document.getElementById('keyinput').value.trim(); if(!v)return;
+    try{ localStorage.setItem('carto-key',v); }catch(e){}
+    location.reload();
+  });
+}
+
+const layers = {1:L.layerGroup(), 2:L.layerGroup()};
+const markers = {};
+function icon(day,label){
+  return L.divIcon({className:'',iconSize:[28,28],iconAnchor:[14,14],
+    html:`<div style="width:28px;height:28px;border-radius:50%;background:${COLORS[day]};color:#fff;display:grid;place-items:center;font:700 14px 'Familjen Grotesk',sans-serif;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)">${label}</div>`});
+}
+const navUrl = s => `https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}&travelmode=driving`;
+function dayRouteUrl(stops){
+  const o=stops[0], d=stops[stops.length-1], w=stops.slice(1,-1).map(s=>`${s.lat},${s.lng}`).join('|');
+  return `https://www.google.com/maps/dir/?api=1&origin=${o.lat},${o.lng}&destination=${d.lat},${d.lng}${w?`&waypoints=${encodeURIComponent(w)}`:''}&travelmode=driving`;
+}
+function haversine(a,b){const R=6371e3,r=x=>x*Math.PI/180;const dl=r(b.lat-a.lat),dg=r(b.lng-a.lng);
+  const h=Math.sin(dl/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dg/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
+function fmtDur(s){const m=Math.round(s/60);if(m<60)return `${m} min`;const h=Math.floor(m/60),r=m%60;return r?`${h} h ${r} min`:`${h} h`;}
+
+// Build markers and timeline
+const plan = document.getElementById('plan');
+Object.entries(DAYS).forEach(([day,cfg])=>{
+  day=+day;
+  const wrap=document.createElement('div');wrap.className='dayblock';wrap.dataset.day=day;
+  wrap.innerHTML=`<div class="dayhead"><h3>${cfg.title}</h3><a href="${dayRouteUrl(cfg.stops)}" target="_blank" rel="noopener">Cijeli dan u Google Maps</a></div><ol class="tl"></ol>`;
+  const ol=wrap.querySelector('ol');
+  cfg.stops.forEach((s,i)=>{
+    const label=s.home?'⌂':i;
+    const key=`${day}-${i}`;
+    const m=L.marker([s.lat,s.lng],{icon:icon(day,label),title:s.n})
+      .bindPopup(`<b>${s.t} ${s.n}</b><br>${s.d}<br><a href="${navUrl(s)}" target="_blank" rel="noopener">Navigacija</a>`);
+    layers[day].addLayer(m); markers[key]=m; m.on('click',()=>highlight(key));
+    if(i>0){
+      const leg=document.createElement('li');leg.className='leg';leg.id=`leg-${day}-${i}`;
+      const dist=haversine(cfg.stops[i-1],s);
+      const walk=dist<1500;
+      if(walk) leg.innerHTML=`<div></div><div class="wake"></div><span>Pješice oko ${Math.max(2,Math.round(dist*1.3/75))} min</span>`;
+      else {leg.classList.add('drive');leg.innerHTML=`<div></div><div class="wake" style="border-color:${COLORS[day]}"></div><span>Vožnja, računam…</span>`;}
+      ol.appendChild(leg);
+    }
+    const li=document.createElement('li');li.className='stop';li.id=`stop-${key}`;
+    li.innerHTML=`<div class="t">${s.t}</div><button class="buoy" data-key="${key}" style="background:${COLORS[day]}" aria-label="Prikaži ${s.n} na karti">${label}</button>
+      <div class="body"><h4>${s.n}</h4><p>${s.d}</p><div class="acts">
+      <button data-key="${key}">Na karti</button><a href="${navUrl(s)}" target="_blank" rel="noopener">Navigacija</a></div></div>`;
+    ol.appendChild(li);
+  });
+  plan.appendChild(wrap);
+});
+
+
+// Extras: accommodation and restaurants
+const xwrap=document.getElementById('extras');
+['sleep','food'].forEach(kind=>{
+  const box=document.createElement('div');
+  box.innerHTML=`<h3 class="xh">${kind==='sleep'?'Smještaj u Udinama':'Restorani i barovi'}</h3><ol class="tl"></ol>`;
+  const ol=box.querySelector('ol');
+  EXTRAS.forEach((x,i)=>{ if(x.k!==kind)return;
+    const key=`x-${i}`;
+    const m=L.marker([x.lat,x.lng],{icon:xicon(x.day,x.k),title:x.n})
+      .bindPopup(`<b>${x.n}</b><br>${x.d}<br><a href="${navUrl(x)}" target="_blank" rel="noopener">Navigacija</a>${x.url?` · <a href="${x.url}" target="_blank" rel="noopener">Booking</a>`:''}`);
+    layers[x.day].addLayer(m); markers[key]=m; m.on('click',()=>highlight(key));
+    const li=document.createElement('li');li.className='stop';li.id=`stop-${key}`;li.dataset.day=x.day;
+    li.innerHTML=`<div class="t">${x.day===1?'Sub':'Ned'}</div><button class="buoy xb" data-key="${key}" data-day="${x.day}" style="background:#fff;border:2px solid ${COLORS[x.day]}" aria-label="Prikaži ${x.n} na karti">${XICON[x.k]}</button>
+      <div class="body"><h4>${x.n}</h4><p>${x.d}</p><div class="acts"><button data-key="${key}" data-day="${x.day}">Na karti</button><a href="${navUrl(x)}" target="_blank" rel="noopener">Navigacija</a>${x.url?`<a href="${x.url}" target="_blank" rel="noopener">Booking</a>`:''}</div></div>`;
+    ol.appendChild(li);
+  });
+  xwrap.appendChild(box);
+});
+// Routes via OSRM (driving legs only), straight-line fallback
+async function route(day){
+  const stops=DAYS[day].stops;
+  const coords=stops.map(s=>`${s.lng},${s.lat}`).join(';');
+  try{
+    const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`);
+    const j=await r.json(); if(j.code!=='Ok')throw 0;
+    const rt=j.routes[0];
+    L.geoJSON(rt.geometry,{style:{color:COLORS[day],weight:5,opacity:.8}}).addTo(layers[day]);
+    rt.legs.forEach((lg,idx)=>{
+      const el=document.getElementById(`leg-${day}-${idx+1}`);
+      if(el&&el.classList.contains('drive'))
+        el.querySelector('span').textContent=`Vožnja ${fmtDur(lg.duration)}, ${Math.round(lg.distance/1000)} km`;
+    });
+  }catch(e){
+    L.polyline(stops.map(s=>[s.lat,s.lng]),{color:COLORS[day],weight:4,dashArray:'6 8'}).addTo(layers[day]);
+    document.querySelectorAll(`[id^="leg-${day}-"].drive span`).forEach(s=>s.textContent='Vožnja, vrijeme provjerite u navigaciji');
+  }
+}
+route(1); route(2);
+
+// Day filter
+let current='all';
+function show(day){
+  current=day;
+  [1,2].forEach(d=>{ (day==='all'||+day===d)?layers[d].addTo(map):map.removeLayer(layers[d]); });
+  document.querySelectorAll('.dayblock').forEach(b=>b.hidden=!(day==='all'||b.dataset.day===String(day)));
+  document.querySelectorAll('.days button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.day===String(day)));
+  const pts=(day==='all'?[...DAYS[1].stops,...DAYS[2].stops]:DAYS[day].stops).map(s=>[s.lat,s.lng]);
+  map.fitBounds(pts,{padding:[30,30]});
+}
+document.querySelectorAll('.days button').forEach(b=>b.addEventListener('click',()=>show(b.dataset.day)));
+function highlight(k){
+  document.querySelectorAll('.stop.active').forEach(x=>x.classList.remove('active'));
+  const row=document.getElementById(`stop-${k}`); if(row) row.classList.add('active');
+}
+function focusFrom(e){
+  const el=e.target.closest('[data-key]'); const k=el&&el.dataset.key; if(!k)return;
+  highlight(k);
+  const day=el.dataset.day||k.split('-')[0]; if(current!=='all'&&current!==day)show(day);
+  const m=markers[k]; map.flyTo(m.getLatLng(),16,{duration:.6}); m.openPopup();
+  document.getElementById('map').scrollIntoView({behavior:'smooth',block:'start'});
+}
+plan.addEventListener('click',focusFrom);
+document.getElementById('extras').addEventListener('click',focusFrom);
+show('all');
+
+// Storage helpers
+const KEY='vikend-muggia-cividale-2026';
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return{}}}
+function save(s){try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}}
+let state=Object.assign({checks:{},people:'Dino, Dolores, Krešo, Jelena',expenses:[]},load());
+
+// Checklist
+const ITEMS=['Slovenska e-vinjeta (tjedna)','Smještaj u Udinama s parkingom','Datum Feste della Zucca (Borgo Brossana / cividale.net)','Rezervacija: Osteria Alla Ghiacciaia (sub. 20 h) i Antico Leon d’Oro (ned. 12:30)','EasyPark aplikacija za parking u Muggii','Rashladna torba za Coop','Osobne iskaznice i malo gotovine'];
+const cl=document.getElementById('checklist');
+ITEMS.forEach((t,i)=>{
+  const li=document.createElement('li');
+  li.innerHTML=`<label><input type="checkbox" ${state.checks[i]?'checked':''}><span>${t}</span></label>`;
+  li.querySelector('input').addEventListener('change',e=>{state.checks[i]=e.target.checked;save(state);});
+  cl.appendChild(li);
+});
+
+// Expense splitter
+const $=id=>document.getElementById(id);
+const eur=n=>n.toLocaleString('hr-HR',{style:'currency',currency:'EUR'});
+function people(){return state.people.split(',').map(s=>s.trim()).filter(Boolean);}
+function settle(){
+  const ps=people(); if(!ps.length)return{bal:{},tx:[]};
+  const total=state.expenses.reduce((a,x)=>a+x.amt,0), share=total/ps.length;
+  const bal={}; ps.forEach(p=>bal[p]=-share);
+  state.expenses.forEach(x=>{if(x.who in bal)bal[x.who]+=x.amt;});
+  const cr=ps.filter(p=>bal[p]>0.005).map(p=>({p,v:bal[p]})).sort((a,b)=>b.v-a.v);
+  const db=ps.filter(p=>bal[p]<-0.005).map(p=>({p,v:-bal[p]})).sort((a,b)=>b.v-a.v);
+  const tx=[];let i=0,j=0;
+  while(i<db.length&&j<cr.length){const v=Math.min(db[i].v,cr[j].v);tx.push([db[i].p,cr[j].p,v]);db[i].v-=v;cr[j].v-=v;if(db[i].v<0.005)i++;if(cr[j].v<0.005)j++;}
+  return{bal,tx,total,share};
+}
+function render(){
+  $('people').value=state.people;
+  const ps=people();
+  $('exWho').innerHTML=ps.length?ps.map(p=>`<option>${p}</option>`).join(''):'<option value="">Prvo upišite imena</option>';
+  const led=$('ledger');
+  if(!state.expenses.length){led.innerHTML='<p class="empty">Još nema troškova. Upišite imena i dodajte prvi račun.</p>';}
+  else{
+    const s=settle();
+    led.innerHTML=`<table><thead><tr><th>Trošak</th><th>Platio</th><th class="num">Iznos</th><th></th></tr></thead><tbody>
+      ${state.expenses.map((x,i)=>`<tr><td>${x.desc}</td><td>${x.who}</td><td class="num">${eur(x.amt)}</td><td><button class="del" data-i="${i}" aria-label="Obriši">×</button></td></tr>`).join('')}
+      <tr><th colspan="2">Ukupno, po osobi ${ps.length?eur(s.share):'–'}</th><th class="num">${eur(s.total)}</th><th></th></tr></tbody></table>
+      ${s.tx.length?`<ol class="settle">${s.tx.map(([a,b,v])=>`<li>${a} daje ${b}: <b>${eur(v)}</b></li>`).join('')}</ol>`:'<p class="empty">Svi su na nuli.</p>'}`;
+    led.querySelectorAll('.del').forEach(b=>b.addEventListener('click',()=>{state.expenses.splice(+b.dataset.i,1);save(state);render();}));
+  }
+  const s=settle();
+  const txt=`Vikend Muggia–Udine–Cividale\nUkupno: ${eur(s.total||0)}\n`+(s.tx||[]).map(([a,b,v])=>`${a} → ${b}: ${eur(v)}`).join('\n');
+  $('shareWa').href='https://wa.me/?text='+encodeURIComponent(txt);
+}
+$('people').addEventListener('change',e=>{state.people=e.target.value;save(state);render();});
+$('addEx').addEventListener('click',()=>{
+  const amt=parseFloat(String($('exAmt').value).replace(',','.')), who=$('exWho').value, desc=$('exDesc').value.trim()||'Trošak';
+  if(!who||!(amt>0))return;
+  state.expenses.push({desc,amt,who});save(state);$('exAmt').value='';$('exDesc').value='';render();
+});
+$('resetEx').addEventListener('click',()=>{if(confirm('Obrisati sve troškove?')){state.expenses=[];save(state);render();}});
+render();
+</script>
+</body>
+</html>
