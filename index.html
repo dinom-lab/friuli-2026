@@ -114,7 +114,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 <header>
   <h1>Muggia, Udine i Cividale</h1>
   <p>Subota i nedjelja, 10.–11. listopada 2026. Sa Zagrebom na oba kraja.</p>
-  <span class="flag">Datum Feste della Zucca za 2026. još nije potvrđen</span>
+  <span class="flag">U nedjelju je Festa della Zucca u Cividaleu 🎃</span>
 </header>
 
 <section id="wx" class="wxwrap" hidden aria-label="Vremenska prognoza">
@@ -164,7 +164,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   <section>
     <h2>Dobro je znati</h2>
     <div class="panel">
-      <p><b>Festa della Zucca.</b> Obično je prve nedjelje u listopadu (2025. je bila 5.10., 2024. 6.10.), pa 2026. možda pada 4.10. Provjerite na Facebook stranici Borgo Brossana ili cividale.net.</p>
+      <p><b>Festa della Zucca.</b> Regionalni kalendar događanja navodi je u nedjelju 11.10. Uz Borgo Brossana obično se širi i na centar: tržnica, rukotvorine, rezbarenje bundeva, frittelle od bundeve i kesteni uz ribollu. Zato u Cividale dođite ranije, dok ima parkinga.</p>
       <p><b>Muggia.</b> Parcheggio Caliterna košta oko 1,40–1,50 €/h i može se platiti preko EasyParka. Castello je privatan i ne ulazi se u njega.</p>
       <p><b>Udine.</b> Castello di Udine: dvorište i pogled su besplatni, muzej radi uto–ned 10–18. Aperitivo se u Udinama zove tajut.</p>
       <p><b>Cividale.</b> Tempietto radi 10–13 i 14–18, a u podnevnoj pauzi je zatvoren. Probajte frico i gubanu.</p>
@@ -212,7 +212,7 @@ const DAYS = {
     {t:'10:00', n:'Udine', d:'Lagano jutro i doručak. Do Cividalea oko 20 min.', lat:46.0633122, lng:13.2357425},
     {t:'10:30', n:'Ponte del Diavolo', d:'Stepenicama do rijeke Natisone po najbolji kadar.', lat:46.0918288, lng:13.4317029},
     {t:'11:00', n:'Tempietto Longobardo', d:'UNESCO, 8. stoljeće. Radi 10–13 i 14–18, pa ujutro stignete bez žurbe.', lat:46.0930887, lng:13.4324826},
-    {t:'11:45', n:'Borgo Brossana', d:'Ovdje je Festa della Zucca, ako je taj dan: frittelle od bundeve, kesteni i ribolla. I bez feste je lijepa šetnja uz rijeku.', lat:46.0941751, lng:13.4391158},
+    {t:'11:45', n:'Borgo Brossana', d:'Srce Feste della Zucca: frittelle od bundeve, kesteni uz ribollu i rezbarenje bundeva. Štandovi su i po centru.', lat:46.0941751, lng:13.4391158},
     {t:'12:30', n:'Antico Leon d\u2019Oro', d:'Ručak u vrtu kraj Ponte del Diavolo. Nedjeljom kuhinja radi 12–14, pa rezervirajte (+39 0432 731100). Obavezno gelato za stolom na kraju.', lat:46.0906284, lng:13.4321741},
     {t:'14:00', n:'Piazza Paolo Diacono', d:'Kava i gubana za put. Polazak prema Duinu oko 14:15, vožnja oko 55 min.', lat:46.0946837, lng:13.4311858},
     {t:'15:15', n:'Castello di Duino', d:'Dvorac na litici iznad mora, nedjeljom otvoren do 17:30. Uz izložbu su kula s pogledom i stari bunker. Računajte oko 1 h.', lat:45.772055, lng:13.603984},
@@ -445,7 +445,7 @@ function save(s){try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}}
 let state=Object.assign({checks:{},people:'Dino, Dolores, Krešo, Jelena',expenses:[]},load());
 
 // Checklist
-const ITEMS=['Slovenska e-vinjeta (tjedna)','Smještaj u Udinama s parkingom','Datum Feste della Zucca (Borgo Brossana / cividale.net)','Rezervacija: Osteria Alla Ghiacciaia (sub. 20 h) i Antico Leon d’Oro (ned. 12:30)','EasyPark aplikacija za parking u Muggii','Rashladna torba za Coop','Osobne iskaznice i malo gotovine'];
+const ITEMS=['Slovenska e-vinjeta (tjedna)','Smještaj u Udinama s parkingom','Rezervacija: Osteria Alla Ghiacciaia (sub. 20 h) i Antico Leon d’Oro (ned. 12:30)','EasyPark aplikacija za parking u Muggii','Rashladna torba za Coop','Osobne iskaznice i malo gotovine'];
 const cl=document.getElementById('checklist');
 ITEMS.forEach((t,i)=>{
   const li=document.createElement('li');
