@@ -66,6 +66,16 @@ section>h2{font-size:24px;margin-bottom:10px}
 .leg.drive .wake{border-left-style:solid}
 .leg span{align-self:center;font-size:15px;color:var(--muted)}
 
+.wxwrap{max-width:760px;margin:0 auto;padding:0 18px 14px}
+.wxgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wxcard{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.wxcard h3{font-size:16px;margin:0 0 4px;color:var(--muted);font-weight:500}
+.wxbig{display:flex;align-items:center;gap:10px;font-family:"Familjen Grotesk",sans-serif;font-size:26px;font-weight:700}
+.wxbig span:first-child{font-size:30px}
+.wxcard p{margin:4px 0 0;font-size:15px;color:var(--muted)}
+.wxwarn{color:#B4441B!important;font-weight:600}
+.wxnote{margin:8px 0 0;font-size:14px;color:var(--muted)}
+.wx{display:inline-block;margin:2px 0 4px;padding:2px 8px;border-radius:999px;background:var(--bg);border:1px solid var(--line);font-size:14px;color:var(--text)}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
 .panel p{margin:0 0 10px}
 .panel p:last-child{margin:0}
@@ -106,6 +116,11 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   <p>Subota i nedjelja, 10.–11. listopada 2026. Sa Zagrebom na oba kraja.</p>
   <span class="flag">Datum Feste della Zucca za 2026. još nije potvrđen</span>
 </header>
+
+<section id="wx" class="wxwrap" hidden aria-label="Vremenska prognoza">
+  <div class="wxgrid" id="wxgrid"></div>
+  <p class="wxnote" id="wxnote"></p>
+</section>
 
 <div id="keybar" class="keybar" hidden>
   <p>Karta treba besplatni CARTO ključ. Uzmi ga na <a href="https://carto.com/basemaps/apikey" target="_blank" rel="noopener">carto.com/basemaps/apikey</a> i zalijepi ovdje.</p>
@@ -329,6 +344,63 @@ async function route(day){
   }
 }
 route(1); route(2);
+
+// Weather: Open-Meteo (free, no key). Shows forecast at each stop's planned hour.
+const TRIP_DATES={1:'2026-10-10',2:'2026-10-11'};
+const WMO={0:['☀️','sunčano'],1:['🌤️','pretežno sunčano'],2:['⛅','djelomično oblačno'],3:['☁️','oblačno'],45:['🌫️','magla'],48:['🌫️','magla'],
+  51:['🌦️','rosulja'],53:['🌦️','rosulja'],55:['🌦️','rosulja'],61:['🌧️','slaba kiša'],63:['🌧️','kiša'],65:['🌧️','jaka kiša'],
+  80:['🌦️','pljuskovi'],81:['🌧️','pljuskovi'],82:['⛈️','jaki pljuskovi'],95:['⛈️','grmljavina'],96:['⛈️','grmljavina'],99:['⛈️','grmljavina']};
+const wmo=c=>WMO[c]||['🌡️',''];
+async function loadWeather(){
+  const pts=[];
+  [1,2].forEach(day=>DAYS[day].stops.forEach((s,i)=>{
+    if(s.home)return;
+    const m=String(s.t).match(/(\d{1,2}):(\d{2})/); if(!m)return;
+    let hr=+m[1]+(+m[2]>=30?1:0); if(hr>23)hr=23;
+    pts.push({day,i,s,hr,loc:`${s.lat.toFixed(2)},${s.lng.toFixed(2)}`});
+  }));
+  const locs=[...new Set(pts.map(p=>p.loc))];
+  const lat=locs.map(l=>l.split(',')[0]).join(','), lng=locs.map(l=>l.split(',')[1]).join(',');
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m&timezone=Europe%2FRome&start_date=${TRIP_DATES[1]}&end_date=${TRIP_DATES[2]}`;
+  let data;
+  try{
+    const r=await fetch(url); if(!r.ok)throw 0;
+    data=await r.json(); if(!Array.isArray(data))data=[data];
+  }catch(e){
+    const w=document.getElementById('wx'); w.hidden=false;
+    document.getElementById('wxnote').textContent='Prognoza se pojavi automatski kad bude dostupna (Open-Meteo daje do 16 dana unaprijed).';
+    return;
+  }
+  const sum={1:{t:[],p:[],codes:[],bura:0},2:{t:[],p:[],codes:[],bura:0}};
+  pts.forEach(p=>{
+    const H=data[locs.indexOf(p.loc)].hourly, k=(p.day-1)*24+p.hr;
+    const t=Math.round(H.temperature_2m[k]), pr=H.precipitation_probability[k]??0, c=H.weather_code[k];
+    const g=Math.round(H.wind_gusts_10m[k]), dir=H.wind_direction_10m[k];
+    const S=sum[p.day]; S.t.push(t); S.p.push(pr); S.codes.push(c);
+    const isBura=dir>=20&&dir<=100&&g>=45&&p.s.lng>13.5&&p.s.lat<45.8; // NE wind on the Trieste coast
+    if(isBura)S.bura=Math.max(S.bura,g);
+    const row=document.querySelector(`#stop-${p.day}-${p.i} .body h4`);
+    if(row){const chip=document.createElement('span');chip.className='wx';
+      chip.textContent=`${wmo(c)[0]} ${t}°C, kiša ${pr} %${isBura?`, bura do ${g} km/h`:''}`;
+      row.insertAdjacentElement('afterend',chip);}
+  });
+  const grid=document.getElementById('wxgrid');
+  [1,2].forEach(day=>{
+    const S=sum[day]; if(!S.t.length)return;
+    const worst=Math.max(...S.codes), maxP=Math.max(...S.p);
+    const card=document.createElement('div');card.className='wxcard';
+    card.innerHTML=`<h3>${day===1?'Subota 10.10.':'Nedjelja 11.10.'}</h3>
+      <div class="wxbig"><span>${wmo(worst)[0]}</span><span>${Math.min(...S.t)}–${Math.max(...S.t)}°C</span></div>
+      <p>${wmo(worst)[1]}, kiša do ${maxP} %</p>
+      ${S.bura?`<p class="wxwarn">Bura na obali do ${S.bura} km/h, ponesite jaknu</p>`:''}
+      ${maxP>=60?`<p class="wxwarn">Ponesite kišobran</p>`:''}`;
+    grid.appendChild(card);
+  });
+  document.getElementById('wxnote').textContent='Prognoza za planirana mjesta i sate (Open-Meteo), osvježava se pri svakom otvaranju stranice. Za svaku točku piše i u planu ispod karte.';
+  document.getElementById('wx').hidden=false;
+}
+loadWeather();
+
 
 // Day filter
 let current='all';
